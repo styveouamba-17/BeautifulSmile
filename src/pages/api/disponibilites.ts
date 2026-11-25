@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { hours } from '../../lib/clinic';
 import { slotsFor, nowInClinic, weekday } from '../../lib/slots';
-import { listBookings } from '../../lib/store';
+import { listBookings, storageReady } from '../../lib/store';
 
 export const prerender = false;
 
@@ -10,7 +10,7 @@ export const prerender = false;
 // The next open days with their count of free slots, plus the first free slot.
 export const GET: APIRoute = async ({ url }) => {
   const want = Math.min(Math.max(Number(url.searchParams.get('days')) || 12, 1), 30);
-  const all = await listBookings();
+  const all = storageReady() ? await listBookings() : [];
   const taken = (date: string) => all.filter((b) => b.date === date && b.status === 'confirmé').map((b) => b.time);
 
   const start = new Date(nowInClinic().date + 'T00:00:00Z');

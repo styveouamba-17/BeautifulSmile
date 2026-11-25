@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { listBookings, setStatus } from '../lib/store';
+import { listBookings, setStatus, storageReady } from '../lib/store';
 import { services } from '../lib/clinic';
 import { nowInClinic } from '../lib/slots';
 import crypto from 'node:crypto';
@@ -24,7 +24,7 @@ if (Astro.request.method === 'POST') {
   } else if (action === 'logout') {
     Astro.cookies.delete('bs_admin', { path: '/admin' });
     authed = false;
-  } else if (authed && (action === 'cancel' || action === 'restore')) {
+  } else if (authed && storageReady() && (action === 'cancel' || action === 'restore')) {
     await setStatus(String(fd.get('id')), action === 'cancel' ? 'annulé' : 'confirmé');
   }
   if (authed) return Astro.redirect('/admin', 303);
@@ -32,7 +32,8 @@ if (Astro.request.method === 'POST') {
 
 const today = nowInClinic().date;
 const view = Astro.url.searchParams.get('vue') === 'passes' ? 'passes' : 'avenir';
-const all = authed ? await listBookings() : [];
+const ready = storageReady();
+const all = authed && ready ? await listBookings() : [];
 const list = all
   .filter((b) => (view === 'avenir' ? b.date >= today : b.date < today))
   .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) * (view === 'avenir' ? 1 : -1));
@@ -61,6 +62,7 @@ const upcoming = all.filter((b) => b.date >= today && b.status === 'confirmé').
             <h1>Agenda des rendez-vous</h1>
             <form method="post"><input type="hidden" name="action" value="logout" /><button class="btn btn--secondary" type="submit">Se déconnecter</button></form>
           </div>
+          {!ready && <p class="notice" role="alert">Le stockage des rendez-vous n’est pas configuré sur ce serveur. Ajoutez Upstash Redis au projet Vercel (variables KV_REST_API_URL et KV_REST_API_TOKEN), puis redéployez.</p>}
           <div class="stats">
             <div><span class="label">Aujourd’hui</span><strong>{todayCount}</strong></div>
             <div><span class="label">À venir</span><strong>{upcoming}</strong></div>
@@ -112,6 +114,7 @@ const upcoming = all.filter((b) => b.date >= today && b.status === 'confirmé').
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field input { min-height: 48px; padding: 12px 14px; border: 1px solid rgb(16 41 42 / 0.25); border-radius: var(--r-sm); background: #fff; font-size: 16px; }
   .err { color: var(--danger); }
+  .notice { margin-top: 24px; padding: 16px 20px; border-radius: var(--r-md); background: #fbeae8; color: var(--danger); }
   .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0; }
   .stats div { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; display: grid; gap: 4px; }

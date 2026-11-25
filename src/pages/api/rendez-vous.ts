@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { services } from '../../lib/clinic';
 import { slotsFor, isValidDate } from '../../lib/slots';
-import { addBooking, takenTimes } from '../../lib/store';
+import { addBooking, takenTimes, storageReady } from '../../lib/store';
 
 export const prerender = false;
 
@@ -14,6 +14,11 @@ export const POST: APIRoute = async ({ request }) => {
     body = await request.json();
   } catch {
     return Response.json({ error: 'Requête invalide.' }, { status: 400 });
+  }
+
+  if (!storageReady()) {
+    console.error('Booking refused: no Redis configured (KV_REST_API_URL / KV_REST_API_TOKEN).');
+    return Response.json({ error: 'La réservation en ligne est momentanément indisponible. Réessayez plus tard.' }, { status: 503 });
   }
 
   const service = clean(body.service, 40);
