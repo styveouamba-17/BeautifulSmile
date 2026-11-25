@@ -1,0 +1,301 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Booking from '../components/Booking.astro';
+import { services, clinic } from '../lib/clinic';
+
+const img = (name: string) => ({ src: `/img/${name}-1600.webp`, srcset: `/img/${name}-800.webp 800w, /img/${name}-1600.webp 1600w` });
+const arrow = '<svg class="arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
+
+const specialties = [
+  { id: 'orthodontie', photo: 'aligneurs', title: 'Redresse les dents avec des aligneurs', line: 'Des gouttières transparentes changées toutes les deux semaines, presque invisibles au quotidien.' },
+  { id: 'implants', photo: 'implant', title: 'Remplace une dent par un implant', line: 'Une racine en titane et une couronne en céramique, fixes et de la teinte de vos dents.' },
+  { id: 'blanchiment', photo: 'sourire', title: 'Éclaircit les dents en une séance', line: 'Un blanchiment au fauteuil d’une heure, puis des gouttières pour garder le résultat.' },
+];
+
+const faq = [
+  { q: 'Combien coûte une première consultation ?', a: 'La consultation et le bilan commencent à 15 000 FCFA. Pour un traitement plus long, vous recevez un devis écrit avant de commencer.' },
+  { q: 'J’ai mal aujourd’hui, que faire ?', a: 'Réservez le premier horaire libre du jour et écrivez « douleur » dans le message. La clinique vous rappelle pour vous recevoir au plus vite.' },
+  { q: 'Soignez-vous les enfants ?', a: 'Oui, dès 3 ans. Le premier rendez-vous sert surtout à faire connaissance avec le fauteuil et à donner des conseils aux parents.' },
+  { q: 'Mon assurance ou mon IPM prend-elle les soins en charge ?', a: 'Apportez votre carte de prise en charge au rendez-vous. La clinique vous remet une facture détaillée pour votre remboursement.' },
+  { q: 'Comment puis-je payer ?', a: 'En espèces, par carte bancaire, Wave ou Orange Money. Les traitements longs peuvent être réglés en plusieurs fois.' },
+  { q: 'Puis-je déplacer ou annuler mon rendez-vous ?', a: 'Oui, prévenez la clinique au moins 24 heures avant, en répondant au message de confirmation que vous recevez.' },
+];
+---
+<Layout
+  title="BeautifulSmile, clinique dentaire à Sacré-Cœur 3, Dakar"
+  description="Clinique dentaire au rond-point JVC, Sacré-Cœur 3, Dakar : soins, détartrage, blanchiment, orthodontie et implants. Prenez rendez-vous en ligne."
+>
+  <!-- Plan: kind service · palette clinical teal on off-white · Source Serif 4 / Libre Franklin · hero framed photo, words in a solid box · rhythm surface-pairs + one dark band · footer-visit -->
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero__frame">
+        <img {...img('cabinet')} sizes="(max-width: 1440px) 100vw, 1280px" alt="Salle de soins lumineuse avec fauteuil dentaire" fetchpriority="high" data-source="library-unsplash" data-subject="treatment room" />
+        <div class="hero__box on-dark">
+          <h1 id="hero-title">Clinique dentaire à Sacré&#8209;Cœur&nbsp;3, Dakar</h1>
+          <p class="hero__lead">Soins, détartrage, blanchiment, orthodontie et implants. Choisissez votre horaire en ligne et recevez la confirmation de la clinique le jour même.</p>
+          <div class="btn-row">
+            <a class="btn btn--primary" href="#rendez-vous">Prendre rendez-vous <Fragment set:html={arrow} /></a>
+            <a class="btn btn--secondary" href="#soins">Voir les tarifs</a>
+          </div>
+          <p class="hero__meta">
+            <span class="hero__next" id="hero-next">Réservation en ligne 24 h sur 24</span>
+            <span>Rond-point JVC, ouvert du lundi au samedi</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="soins">
+    <div class="wrap">
+      <div class="head">
+        <h2>Soins et tarifs</h2>
+        <p class="lead">Sept soins pour toute la famille, avec un prix de départ affiché. Un devis écrit vous est remis avant tout traitement long.</p>
+      </div>
+      <div class="grid">
+        <ul class="rows">
+          {services.map((s) => (
+            <li>
+              <a href="#rendez-vous" data-soin={s.id} class="row">
+                <span class="row__text">
+                  <span class="row__name">{s.name}</span>
+                  <span class="row__line">{s.line}</span>
+                </span>
+                <span class="row__price">{s.price === 'Sur devis' ? 'Sur devis' : <>dès <strong>{s.price}</strong></>}</span>
+                <span class="row__go" aria-hidden="true"><Fragment set:html={arrow} /></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div class="photo soins__photo photo--hover">
+          <img {...img('controle')} sizes="(max-width: 1023px) 100vw, 520px" alt="Contrôle dentaire avec miroir et sonde" loading="lazy" data-source="library-unsplash" data-subject="dental check-up" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cabinet" class="ground-surface">
+    <div class="wrap">
+      <div class="head">
+        <h2>Un cabinet équipé au rond-point JVC</h2>
+        <p class="lead">Le dentiste vous explique ce qu’il voit à l’écran avant chaque soin. Vous repartez avec un plan clair et son prix.</p>
+      </div>
+      <div class="grid cabinet">
+        <div class="photo photo--hover cabinet__a">
+          <img {...img('consultation')} sizes="(max-width: 1023px) 100vw, 740px" alt="Dentiste expliquant un soin à une patiente assise dans le fauteuil" loading="lazy" data-source="library-unsplash" data-subject="consultation" />
+        </div>
+        <div class="cabinet__b">
+          <div class="photo photo--hover">
+            <img {...img('radiographie')} sizes="(max-width: 1023px) 100vw, 520px" alt="Dentiste examinant des radiographies dentaires" loading="lazy" data-source="library-unsplash" data-subject="x-ray review" />
+          </div>
+          <ul class="facts">
+            <li><strong>Radiographie numérique</strong><span>Une image à l’écran en quelques secondes, avec peu de rayons.</span></li>
+            <li><strong>Matériel stérilisé</strong><span>Chaque instrument est stérilisé et emballé entre deux patients.</span></li>
+            <li><strong>Devis avant les soins</strong><span>Le prix est écrit et expliqué avant de commencer.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="specialites" class="ground-inverse">
+    <div class="wrap">
+      <div class="head">
+        <h2>Aligneurs, implants et blanchiment</h2>
+        <p class="lead">Les trois soins qui changent le plus un sourire. Ils commencent tous par une consultation pour vérifier ce qui vous convient.</p>
+      </div>
+      <div class="grid tiles">
+        {specialties.map((s, i) => (
+          <a class={`tile ${i === 0 ? 'tile--lead' : 'tile--side'}`} href="#rendez-vous" data-soin={s.id}>
+            <span class="photo"><img {...img(s.photo)} sizes={i === 0 ? '(max-width: 767px) 100vw, 740px' : '(max-width: 767px) 100vw, 300px'} alt="" loading="lazy" data-source="library-unsplash" data-subject={s.photo} /></span>
+            <span class="tile__body">
+              <span class="tile__title">{s.title}</span>
+              <span class="tile__line">{s.line}</span>
+              <span class="tile__cta">Réserver une consultation <Fragment set:html={arrow} /></span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="visite">
+    <div class="wrap">
+      <div class="grid visit-split">
+        <div class="photo photo--hover visit-split__photo">
+          <img {...img('soins')} sizes="(max-width: 1023px) 100vw, 620px" alt="Deux praticiens en tenue de protection pendant un soin" loading="lazy" data-source="library-unsplash" data-subject="treatment" />
+        </div>
+        <div class="visit-split__text">
+          <h2>Votre première visite en trois temps</h2>
+          <ol class="steps">
+            <li><span class="steps__n">1</span><div><strong>Vous réservez en ligne</strong><p>Un soin, un jour, une heure. La clinique vous rappelle le jour même pour confirmer.</p></div></li>
+            <li><span class="steps__n">2</span><div><strong>Le dentiste fait le bilan</strong><p>Examen, radio si besoin, puis explication de ce qui est à faire et de son prix.</p></div></li>
+            <li><span class="steps__n">3</span><div><strong>Vous décidez du plan de soins</strong><p>Vous repartez avec le devis écrit et le prochain rendez-vous si vous le souhaitez.</p></div></li>
+          </ol>
+          <a class="btn btn--secondary" href="#questions">Lire les questions fréquentes</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="questions" class="ground-surface">
+    <div class="wrap">
+      <div class="head">
+        <h2>Questions fréquentes</h2>
+        <p class="lead">Les réponses aux questions que les patients posent le plus souvent avant de venir.</p>
+      </div>
+      <dl class="faq">
+        {faq.map((f) => (<div><dt>{f.q}</dt><dd>{f.a}</dd></div>))}
+      </dl>
+      <p class="faq__more">Une autre question ? <a class="link" href={`mailto:${clinic.email}`}>Écrire à la clinique</a></p>
+    </div>
+  </section>
+
+  <Booking />
+</Layout>
+
+<style>
+  /* Hero: one framed photograph, the words in a solid box at its lower left */
+  .hero { padding: calc(var(--nav) + 16px) 0 16px; }
+  .hero__frame { position: relative; height: calc(100svh - var(--nav) - 32px); min-height: 600px; max-height: 900px; border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
+  .hero__frame img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; }
+  .hero__box { position: absolute; left: 32px; bottom: 32px; max-width: 600px; padding: 44px 48px; background: var(--inverse); color: var(--inverse-ink); border-radius: var(--r-md); }
+  .hero__frame img { animation: settle 1.6s var(--ease) both; }
+  @keyframes settle { from { transform: scale(1.06); } }
+  .hero__box { animation: rise 0.9s 0.15s var(--ease) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  .hero h1 { font-size: clamp(40px, 2.2vw + 28px, 60px); }
+  .hero__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 28px; padding-top: 20px; border-top: 1px solid rgb(243 246 244 / 0.14); font-size: var(--t-small); color: var(--inverse-muted); }
+  .hero__next { display: inline-flex; align-items: center; gap: 8px; color: var(--inverse-ink); font-weight: 500; }
+  .hero__next::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #4cc3b4; box-shadow: 0 0 0 3px rgb(76 195 180 / 0.2); }
+  .hero__lead { margin: 20px 0 32px; font-size: var(--t-lead); line-height: 1.55; color: var(--inverse-muted); max-width: 44ch; }
+  @media (max-width: 639px) {
+    .hero { padding: calc(var(--nav) + 12px) 0 12px; }
+    .hero__meta { margin-top: 20px; padding-top: 16px; }
+    .hero h1 { font-size: 36px; }
+    .hero__lead { font-size: 16px; }
+    .hero__next { align-items: flex-start; }
+    .hero__next::before { flex: none; margin-top: 6px; }
+    .hero__frame { height: calc(100svh - var(--nav) - 24px); min-height: 640px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .hero__frame img { position: absolute; inset: 0; object-position: 62% 50%; }
+    .hero__box { position: relative; left: auto; bottom: auto; margin: 12px; padding: 24px; }
+    .hero__lead { margin: 14px 0 24px; }
+    .hero .btn-row .btn { width: 100%; }
+  }
+
+  /* Soins: price rows beside one photograph */
+  .rows { grid-column: span 7; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 4px; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .row::before { content: ''; position: absolute; inset: 0 -12px; border-radius: var(--r-sm); background: var(--surface); opacity: 0; transition: opacity 0.2s; z-index: -1; }
+  .row:hover::before { opacity: 1; }
+  .rows li { position: relative; z-index: 0; }
+  .row__go { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; color: var(--accent); opacity: 0; transform: translateX(-6px); transition: opacity 0.2s, transform 0.25s var(--ease), background 0.2s; }
+  .row__go :global(svg) { width: 16px; height: 16px; }
+  .row:hover .row__go, .row:focus-visible .row__go { opacity: 1; transform: none; background: #fff; }
+  .row__price { margin-left: auto; }
+  .row__text { display: flex; flex-direction: column; gap: 2px; }
+  .row__name { font-family: var(--f-display); font-size: 22px; letter-spacing: -0.01em; }
+  .row__line { color: var(--ink-2); max-width: 52ch; }
+  .row__price { white-space: nowrap; color: var(--muted); font-size: 15px; }
+  .row__price strong { color: var(--ink); font-weight: 500; }
+  .soins__photo { grid-column: 8 / span 5; min-height: 520px; }
+  @media (max-width: 1023px) {
+    .rows { grid-column: 1 / -1; }
+    .soins__photo { grid-column: 1 / -1; min-height: 0; aspect-ratio: 16 / 9; margin-top: 24px; }
+  }
+  @media (max-width: 639px) {
+    .row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .soins__photo { aspect-ratio: 4 / 3; }
+  }
+
+  /* Cabinet: big photo + photo with facts */
+  .cabinet__a { grid-column: span 7; min-height: 560px; }
+  .cabinet__b { grid-column: 8 / span 5; display: flex; flex-direction: column; gap: 32px; }
+  .cabinet__b .photo { aspect-ratio: 3 / 2; }
+  .facts { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+  .facts li { display: grid; gap: 2px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .facts strong { font-weight: 500; }
+  .facts span { color: var(--ink-2); }
+  @media (max-width: 1023px) {
+    .cabinet__a, .cabinet__b { grid-column: 1 / -1; }
+    .cabinet__a { min-height: 0; aspect-ratio: 4 / 3; }
+    .cabinet__b { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  }
+  @media (max-width: 639px) { .cabinet__b { grid-template-columns: 1fr; } }
+
+  /* Specialties: three linked tiles on the dark band */
+  /* One lead tile (aligners) and two side tiles stacked beside it */
+  .tiles { grid-template-rows: 1fr 1fr; }
+  .tile { display: flex; gap: 24px; text-decoration: none; color: inherit; transition: transform 0.25s var(--ease); }
+  .tile:hover { transform: translateY(-2px); }
+  .tile .photo { display: block; flex: none; background: #1b3a3b; }
+  .tile:hover .photo img { transform: scale(1.03); }
+  .tile__body { display: flex; flex-direction: column; gap: 8px; }
+  .tile__title { font-family: var(--f-display); font-size: var(--t-h3); line-height: 1.25; }
+  .tile__line { color: var(--inverse-muted); max-width: 40ch; }
+  .tile__cta { margin-top: auto; padding-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: #7fd6ca; }
+  .tile__cta :global(svg) { width: 16px; height: 16px; transition: transform 0.2s var(--ease); }
+  .tile:hover .tile__cta :global(svg) { transform: translateX(3px); }
+  .tile--lead { grid-column: span 7; grid-row: span 2; flex-direction: column; }
+  .tile--lead .photo { aspect-ratio: 16 / 11; }
+  .tile--lead .tile__title { font-size: 28px; }
+  .tile--side { grid-column: 8 / span 5; }
+  .tile--side .photo { width: 46%; aspect-ratio: 4 / 5; }
+  .tile--side .tile__body { padding: 8px 0; }
+  @media (max-width: 1023px) {
+    .tile--side .photo { width: 42%; }
+  }
+  @media (max-width: 767px) {
+    .tiles { grid-template-rows: none; row-gap: 40px; }
+    .tile--lead, .tile--side { grid-column: 1 / -1; grid-row: auto; flex-direction: column; }
+    .tile--side .photo { width: 100%; aspect-ratio: 16 / 10; }
+    .tile--lead .tile__title { font-size: var(--t-h3); }
+  }
+
+  /* First visit: photo + steps */
+  .visit-split { align-items: stretch; }
+  .visit-split__photo { grid-column: span 6; min-height: 640px; }
+  #questions { min-height: auto; }
+  .visit-split__text { grid-column: 8 / span 5; display: flex; flex-direction: column; justify-content: center; }
+  .steps { list-style: none; padding: 0; margin: 40px 0; display: grid; gap: 28px; }
+  .steps li { display: grid; grid-template-columns: 44px 1fr; gap: 16px; }
+  .steps__n { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-family: var(--f-display); font-size: 20px; }
+  .steps strong { font-weight: 500; font-size: 18px; display: block; margin-bottom: 4px; }
+  .steps p { color: var(--ink-2); }
+  .visit-split__text .btn { align-self: flex-start; }
+  @media (max-width: 1023px) {
+    .visit-split__photo, .visit-split__text { grid-column: 1 / -1; }
+    .visit-split__photo { order: 2; min-height: 0; aspect-ratio: 16 / 10; margin-top: 16px; }
+  }
+  @media (max-width: 639px) { .visit-split__text .btn { width: 100%; } }
+
+  /* FAQ: answers open, two columns */
+  .faq { display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px; margin: 0; }
+  .faq div { padding: 24px 0; border-top: 1px solid var(--line); }
+  .faq dt { font-family: var(--f-display); font-size: 21px; line-height: 1.3; margin-bottom: 8px; }
+  .faq dd { margin: 0; color: var(--ink-2); max-width: 52ch; }
+  @media (max-width: 767px) { .faq { grid-template-columns: 1fr; } }
+  .faq__more { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-2); }
+</style>
+
+<script>
+  // Show the real next free slot in the hero (falls back to the static line).
+  const el = document.getElementById('hero-next');
+  if (el) {
+    fetch('/api/disponibilites?days=7')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.next) return;
+        const { date, time } = data.next;
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Dakar' }).format(new Date());
+        const tomorrow = new Date(new Date(today + 'T00:00:00Z').getTime() + 86400000).toISOString().slice(0, 10);
+        const day =
+          date === today ? 'aujourd’hui'
+          : date === tomorrow ? 'demain'
+          : new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(date + 'T00:00:00Z'));
+        el.textContent = `Prochain horaire libre : ${day} à ${time.replace(':', ' h ')}`;
+      })
+      .catch(() => {});
+  }
+</script>

@@ -1,0 +1,534 @@
+---
+import { services, clinic, hoursRows } from '../lib/clinic';
+---
+<section id="rendez-vous" class="booking-section">
+  <div class="wrap">
+    <div class="head">
+      <h2>Rendez-vous en ligne, en trois étapes</h2>
+      <p class="lead">Choisissez un soin, un jour et une heure libres. Votre créneau est réservé tout de suite, et la clinique vous rappelle le jour même pour confirmer.</p>
+    </div>
+
+    <div class="bk">
+      <form class="bk__panel" id="bk-form" novalidate>
+        <ol class="bk__steps" aria-label="Étapes">
+          <li data-step-label="1" aria-current="step"><span>1</span>Soin</li>
+          <li data-step-label="2"><span>2</span>Date et heure</li>
+          <li data-step-label="3"><span>3</span>Coordonnées</li>
+        </ol>
+        <p class="bk__recap" id="bk-recap" aria-live="polite" hidden></p>
+
+        <!-- Step 1 -->
+        <fieldset class="bk__step" data-step="1">
+          <legend class="bk__legend">Quel soin souhaitez-vous ?</legend>
+          <div class="bk__services">
+            {services.map((s) => (
+              <label class="opt">
+                <input type="radio" name="service" value={s.id} data-name={s.name} data-price={s.price} data-duration={s.duration} />
+                <span class="opt__name">{s.name}</span>
+                <span class="opt__meta">{s.price === 'Sur devis' ? 'Sur devis' : `Dès ${s.price}`} · {s.duration} min</span>
+              </label>
+            ))}
+          </div>
+          <p class="bk__error" data-error="service" role="alert"></p>
+          <div class="bk__nav">
+            <span></span>
+            <button class="btn btn--primary" type="button" data-next>Choisir une date</button>
+          </div>
+        </fieldset>
+
+        <!-- Step 2 -->
+        <fieldset class="bk__step" data-step="2" hidden>
+          <legend class="bk__legend">Quel jour vous convient ?</legend>
+          <div class="bk__days" id="bk-days" role="radiogroup" aria-label="Jour" aria-busy="true">
+            {Array.from({ length: 12 }).map(() => <span class="sk sk--day" aria-hidden="true"></span>)}
+          </div>
+          <div class="bk__times" id="bk-times" aria-live="polite"></div>
+          <p class="bk__error" data-error="time" role="alert"></p>
+          <div class="bk__nav">
+            <button class="btn btn--secondary" type="button" data-prev>Retour</button>
+            <button class="btn btn--primary" type="button" data-next>Indiquer mes coordonnées</button>
+          </div>
+        </fieldset>
+
+        <!-- Step 3 -->
+        <fieldset class="bk__step" data-step="3" hidden>
+          <legend class="bk__legend">Vos coordonnées</legend>
+          <div class="bk__fields">
+            <label class="field">
+              <span class="label">Nom et prénom</span>
+              <input name="name" autocomplete="name" required maxlength="80" aria-describedby="err-name" />
+              <span class="bk__error" id="err-name" data-error="name"></span>
+            </label>
+            <label class="field">
+              <span class="label">Téléphone, WhatsApp de préférence</span>
+              <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="30" value="+221 " aria-describedby="err-phone" />
+              <span class="bk__error" id="err-phone" data-error="phone"></span>
+            </label>
+            <label class="field field--wide">
+              <span class="label">E-mail, facultatif</span>
+              <input name="email" type="email" autocomplete="email" maxlength="120" aria-describedby="err-email" />
+              <span class="bk__error" id="err-email" data-error="email"></span>
+            </label>
+            <label class="field field--wide">
+              <span class="label">Un mot pour le dentiste, facultatif</span>
+              <textarea name="note" rows="3" maxlength="500" placeholder="Douleur, première visite, rendez-vous pour un enfant…"></textarea>
+            </label>
+            <label class="hp" aria-hidden="true">Site web <input name="website" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <p class="bk__consent muted">Vos coordonnées servent uniquement à organiser ce rendez-vous. <a class="link" href="/confidentialite">Confidentialité</a></p>
+          <p class="bk__error" data-error="form" role="alert"></p>
+          <div class="bk__nav">
+            <button class="btn btn--secondary" type="button" data-prev>Retour</button>
+            <button class="btn btn--primary" type="submit"><span class="spin" aria-hidden="true"></span><span data-label>Prendre rendez-vous</span></button>
+          </div>
+        </fieldset>
+
+        <!-- Done -->
+        <div class="bk__done" hidden tabindex="-1">
+          <svg viewBox="0 0 48 48" class="bk__check" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="var(--accent)" /><path d="m14 24.5 7 7 13-14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1" /></svg>
+          <h3>Votre rendez-vous est réservé</h3>
+          <p class="lead" id="bk-done-text"></p>
+          <dl class="bk__ticket">
+            <div><dt>Référence</dt><dd id="bk-ref"></dd></div>
+            <div><dt>Adresse</dt><dd>{clinic.street}, {clinic.district}</dd></div>
+          </dl>
+          <div class="btn-row">
+            <a class="btn btn--secondary" id="bk-ics" download="rendez-vous-beautifulsmile.ics">Ajouter à mon agenda</a>
+            <a class="btn btn--secondary" href={clinic.mapUrl} target="_blank" rel="noopener">Voir l’itinéraire</a>
+          </div>
+          <button class="bk__again link" type="button" id="bk-again">Réserver un autre soin</button>
+        </div>
+      </form>
+
+      <aside class="bk__aside">
+        <div class="sum sum--live">
+          <p class="label">Votre rendez-vous</p>
+          <dl>
+            <div><dt>Soin</dt><dd id="sum-service">—</dd></div>
+            <div><dt>Date</dt><dd id="sum-date">—</dd></div>
+            <div><dt>Heure</dt><dd id="sum-time">—</dd></div>
+            <div><dt>Tarif</dt><dd id="sum-price">—</dd></div>
+          </dl>
+        </div>
+        <div class="sum sum--plain">
+          <p class="label">Où</p>
+          <p class="sum__addr">{clinic.kind} {clinic.name}<br />{clinic.street}, {clinic.district}, {clinic.city}</p>
+          <a class="link" href={clinic.mapUrl} target="_blank" rel="noopener">Voir l’itinéraire</a>
+          <ul class="sum__hours">
+            {hoursRows.map((r) => <li><span>{r.days}</span><span>{r.time}</span></li>)}
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .booking-section { min-height: auto; }
+  .bk { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 24px; align-items: start; }
+  .bk__panel { background: var(--card); border-radius: var(--r-lg); padding: 40px; min-height: 600px; box-shadow: 0 1px 2px rgb(16 41 42 / 0.05), 0 12px 32px -12px rgb(16 41 42 / 0.14); }
+
+  .bk__steps { display: flex; gap: 8px 28px; flex-wrap: wrap; list-style: none; padding: 0 0 24px; margin: 0 0 32px; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+  .bk__steps[hidden] { display: none; }
+  .bk__steps li { display: flex; align-items: center; gap: 10px; transition: color 0.2s; }
+  .bk__steps span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; border: 1px solid var(--line); transition: background 0.25s var(--ease), color 0.25s, border-color 0.25s; }
+  .bk__steps [aria-current='step'] { color: var(--ink); font-weight: 500; }
+  .bk__steps [aria-current='step'] span, .bk__steps .is-done span { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .bk__recap { display: none; margin: -16px 0 24px; padding: 12px 16px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--ink); font-size: 15px; }
+
+  .bk__step { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .bk__step:not([hidden]), .bk__done:not([hidden]) { animation: step-in 0.36s var(--ease) both; }
+  @keyframes step-in { from { opacity: 0; transform: translateY(8px); } }
+  .bk__legend { font-family: var(--f-display); font-size: 26px; letter-spacing: -0.01em; padding: 0; margin-bottom: 24px; }
+
+  .bk__services { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opt { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 16px 48px 16px 18px; border: 1px solid var(--line); border-radius: var(--r-md); cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.18s var(--ease); }
+  .opt::after { content: ''; position: absolute; right: 18px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%; border: 1.5px solid rgb(16 41 42 / 0.3); transition: border-color 0.18s, border-width 0.18s; }
+  .opt:hover { border-color: rgb(16 41 42 / 0.4); transform: translateY(-2px); }
+  .opt:active { transform: translateY(0) scale(0.99); }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt__name { font-weight: 500; }
+  .opt__meta { font-size: var(--t-small); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .opt:has(input:checked)::after { border: 5px solid var(--accent); background: #fff; }
+  .opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .bk__days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .bk__days :global(.day) { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border: 1px solid var(--line); border-radius: var(--r-md); background: transparent; cursor: pointer; transition: border-color 0.18s, background 0.18s, transform 0.18s var(--ease); }
+  .bk__days :global(.day:hover:not(:disabled)) { border-color: rgb(16 41 42 / 0.4); transform: translateY(-2px); }
+  .bk__days :global(.day:active:not(:disabled)) { transform: scale(0.97); }
+  .bk__days :global(.day small) { font-size: 13px; color: var(--muted); }
+  .bk__days :global(.day strong) { font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.2; font-variant-numeric: lining-nums; }
+  .bk__days :global(.day[aria-checked='true']) { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .bk__days :global(.day[aria-checked='true'] small) { color: rgb(255 255 255 / 0.85); }
+  .bk__days :global(.day:disabled) { cursor: not-allowed; background: var(--bg); border-style: dashed; }
+  .bk__days :global(.day:disabled strong) { color: var(--muted); }
+
+  .bk__times { min-height: 180px; }
+  .bk__times :global(.group) { margin-top: 28px; }
+  .bk__times :global(.group > p) { font-size: var(--t-label); font-weight: 500; color: var(--muted); margin-bottom: 10px; }
+  .bk__times :global(.slots) { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+  .bk__times :global(.slot) { height: 44px; border: 1px solid var(--line); border-radius: var(--r-sm); background: transparent; cursor: pointer; font-variant-numeric: tabular-nums; transition: border-color 0.18s, background 0.18s, transform 0.12s; }
+  .bk__times :global(.slot:hover) { border-color: var(--accent); }
+  .bk__times :global(.slot:active) { transform: scale(0.96); }
+  .bk__times :global(.slot[aria-checked='true']) { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .bk__times :global(.bk__hint) { margin-top: 28px; }
+
+  /* Loading skeletons */
+  .bk :global(.sk) { display: block; border-radius: var(--r-md); background: linear-gradient(90deg, var(--surface) 0 40%, #f4f7f6 50%, var(--surface) 60% 100%) 0 0 / 300% 100%; animation: sk 1.4s linear infinite; }
+  .bk :global(.sk--day) { height: 74px; }
+  .bk :global(.sk--slot) { height: 44px; border-radius: var(--r-sm); }
+  @keyframes sk { to { background-position: -150% 0; } }
+
+  .bk__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field--wide { grid-column: 1 / -1; }
+  .field input, .field textarea { min-height: 48px; padding: 12px 14px; border: 1px solid rgb(16 41 42 / 0.25); border-radius: var(--r-sm); background: #fff; font-size: 16px; transition: border-color 0.18s, box-shadow 0.18s; }
+  .field textarea { resize: vertical; }
+  .field input:hover, .field textarea:hover { border-color: rgb(16 41 42 / 0.5); }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgb(13 110 102 / 0.18); }
+  .field input[aria-invalid='true'] { border-color: var(--danger); box-shadow: 0 0 0 3px rgb(168 50 42 / 0.12); }
+  .hp { position: absolute; left: -9999px; }
+  .bk__consent { margin-top: 20px; font-size: var(--t-small); }
+  .bk__error { color: var(--danger); font-size: var(--t-small); }
+  .bk__error:empty { display: none; }
+  p.bk__error { margin-top: 12px; }
+  .bk__nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+
+  .spin { display: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgb(255 255 255 / 0.4); border-top-color: #fff; animation: spin 0.7s linear infinite; }
+  [aria-busy='true'] > .spin { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .bk__done:focus { outline: none; }
+  .bk__check { width: 56px; height: 56px; margin-bottom: 24px; }
+  .bk__check circle { animation: pop 0.5s var(--ease) both; transform-origin: center; }
+  .bk__check path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 0.45s 0.2s var(--ease) forwards; }
+  @keyframes pop { from { transform: scale(0.6); opacity: 0; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .bk__done h3 { font-size: 32px; margin-bottom: 12px; }
+  .bk__ticket { margin: 28px 0; padding: 4px 20px; border: 1px dashed rgb(16 41 42 / 0.3); border-radius: var(--r-md); }
+  .bk__ticket div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; }
+  .bk__ticket div + div { border-top: 1px solid var(--line); }
+  .bk__ticket dt { color: var(--muted); }
+  .bk__ticket dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; text-align: right; }
+  .bk__again { display: inline-block; margin-top: 24px; border: 0; padding: 0; cursor: pointer; background-color: transparent; }
+
+  .bk__aside { display: grid; gap: 24px; }
+  .sum { background: var(--card); border-radius: var(--r-lg); padding: 28px; box-shadow: 0 1px 2px rgb(16 41 42 / 0.05), 0 12px 32px -12px rgb(16 41 42 / 0.12); }
+  .sum--plain { background: transparent; box-shadow: none; border: 1px solid var(--line); }
+  .sum .label { margin-bottom: 12px; }
+  .sum dl { margin: 0; }
+  .sum dl div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sum dl div:last-child { border-bottom: 0; }
+  .sum dt { color: var(--muted); }
+  .sum dd { margin: 0; text-align: right; font-weight: 500; }
+  .sum dd.is-new { animation: flash 0.6s var(--ease); }
+  @keyframes flash { from { color: var(--accent); } }
+  .sum__addr { margin-bottom: 8px; }
+  .sum__hours { list-style: none; padding: 0; margin: 20px 0 0; font-size: 15px; }
+  .sum__hours li { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--line); }
+
+  @media (max-width: 1023px) {
+    .bk { grid-template-columns: 1fr; }
+    .sum--live { display: none; }
+    .bk__recap:not([hidden]) { display: block; }
+  }
+  @media (max-width: 639px) {
+    .bk__panel { padding: 24px 20px; min-height: 0; }
+    .bk__services, .bk__fields { grid-template-columns: 1fr; }
+    .bk__days { grid-template-columns: repeat(4, 1fr); }
+    .bk__nav { flex-direction: column-reverse; }
+    .bk__nav .btn { width: 100%; }
+    .bk__nav > span { display: none; }
+    .bk__steps { font-size: 0; gap: 8px; }
+    .bk__steps [aria-current='step'] { font-size: 15px; }
+    .bk__done .btn-row .btn { width: 100%; }
+  }
+</style>
+
+<script>
+  const form = document.getElementById('bk-form') as HTMLFormElement;
+  const steps = [...form.querySelectorAll<HTMLElement>('.bk__step')];
+  const labels = [...form.querySelectorAll<HTMLElement>('[data-step-label]')];
+  const daysEl = document.getElementById('bk-days')!;
+  const timesEl = document.getElementById('bk-times')!;
+  const done = form.querySelector<HTMLElement>('.bk__done')!;
+  const recap = document.getElementById('bk-recap')!;
+  const $ = (id: string) => document.getElementById(id)!;
+
+  const state = { step: 1, service: '', serviceName: '', price: '', duration: 30, date: '', time: '' };
+
+  const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { ...o, timeZone: 'UTC' }).format(new Date(d + 'T00:00:00Z'));
+  const fmtLong = (d: string) => fmt(d, { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtShort = (d: string) => fmt(d, { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
+  const hm = (t: string) => t.replace(':', ' h ');
+
+  function err(key: string, msg = '') {
+    form.querySelectorAll<HTMLElement>(`[data-error="${key}"]`).forEach((e) => (e.textContent = msg));
+    const input = form.querySelector<HTMLInputElement>(`[name="${key}"]`);
+    if (input && input.type !== 'radio') input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  }
+
+  function setSum(id: string, value: string) {
+    const el = $(id);
+    if (el.textContent === value) return;
+    el.textContent = value;
+    el.classList.remove('is-new');
+    void el.offsetWidth;
+    if (value !== '—') el.classList.add('is-new');
+  }
+
+  function summary() {
+    const price = state.price ? (state.price === 'Sur devis' ? 'Sur devis' : `Dès ${state.price}`) : '—';
+    setSum('sum-service', state.serviceName || '—');
+    setSum('sum-date', state.date ? fmtLong(state.date) : '—');
+    setSum('sum-time', state.time ? hm(state.time) : '—');
+    setSum('sum-price', price);
+    const parts = [state.serviceName, state.date && fmtShort(state.date), state.time && hm(state.time)].filter(Boolean);
+    recap.textContent = parts.join(' · ');
+    recap.hidden = !parts.length || state.step === 1;
+  }
+
+  function go(n: number) {
+    state.step = n;
+    steps.forEach((s) => (s.hidden = Number(s.dataset.step) !== n));
+    labels.forEach((l) => {
+      const i = Number(l.dataset.stepLabel);
+      if (i === n) l.setAttribute('aria-current', 'step');
+      else l.removeAttribute('aria-current');
+      l.classList.toggle('is-done', i < n);
+    });
+    if (n === 2) enterDates();
+    summary();
+    const top = form.getBoundingClientRect().top;
+    if (top < 0 || top > innerHeight * 0.6) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const first = steps[n - 1].querySelector<HTMLElement>('input:not([type=radio])');
+    if (n === 3 && first && matchMedia('(pointer: fine)').matches) first.focus({ preventScroll: true });
+  }
+
+  // ----- Step 1: service
+  form.querySelectorAll<HTMLInputElement>('input[name=service]').forEach((r) =>
+    r.addEventListener('change', () => {
+      state.service = r.value;
+      state.serviceName = r.dataset.name!;
+      state.price = r.dataset.price!;
+      state.duration = Number(r.dataset.duration);
+      err('service');
+      summary();
+    }),
+  );
+
+  // ----- Step 2: days (with availability) and grouped slots
+  function radioGroup(container: HTMLElement, onPick: (b: HTMLButtonElement) => void) {
+    container.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[role=radio]');
+      if (!b || b.disabled) return;
+      container.querySelectorAll('[role=radio]').forEach((x) => {
+        x.setAttribute('aria-checked', String(x === b));
+        x.setAttribute('tabindex', x === b ? '0' : '-1');
+      });
+      onPick(b);
+    });
+    container.addEventListener('keydown', (e) => {
+      const items = [...container.querySelectorAll<HTMLButtonElement>('[role=radio]:not(:disabled)')];
+      const i = items.indexOf(document.activeElement as HTMLButtonElement);
+      const delta = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
+      if (i < 0 || !delta) return;
+      e.preventDefault();
+      const next = items[(i + delta + items.length) % items.length];
+      next.focus();
+      next.click();
+    });
+  }
+
+  let daysLoaded = false;
+  async function enterDates() {
+    if (daysLoaded) return;
+    try {
+      const res = await fetch('/api/disponibilites?days=12');
+      const data: { days: { date: string; free: number }[] } = await res.json();
+      daysEl.innerHTML = data.days
+        .map(({ date, free }) => {
+          const dt = new Date(date + 'T00:00:00Z');
+          const wd = fmt(date, { weekday: 'short' }).replace('.', '');
+          const mo = fmt(date, { month: 'short' }).replace('.', '');
+          const label = free ? `${fmtLong(date)}, ${free} horaire${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}` : `${fmtLong(date)}, complet`;
+          return `<button type="button" class="day" role="radio" aria-checked="false" tabindex="-1" data-date="${date}" aria-label="${label}" ${free ? '' : 'disabled'}><small>${wd}</small><strong>${dt.getUTCDate()}</strong><small>${free ? mo : 'complet'}</small></button>`;
+        })
+        .join('');
+      daysEl.removeAttribute('aria-busy');
+      daysLoaded = true;
+      // Open the chosen day again, or the first day with free slots, so the times show at once.
+      const keep = state.date && daysEl.querySelector<HTMLButtonElement>(`[data-date="${state.date}"]:not(:disabled)`);
+      (keep || daysEl.querySelector<HTMLButtonElement>('.day:not(:disabled)'))?.click();
+    } catch {
+      daysEl.removeAttribute('aria-busy');
+      daysEl.innerHTML = '<p class="bk__error" style="grid-column:1/-1">Les jours n’ont pas pu être chargés. <button type="button" class="link" data-retry-days style="border:0;padding:0;background:none;cursor:pointer">Réessayer</button></p>';
+    }
+  }
+  daysEl.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-retry-days]')) enterDates();
+  });
+
+  let loadId = 0;
+  async function loadSlots(date: string, keep = '') {
+    const id = ++loadId;
+    timesEl.setAttribute('aria-busy', 'true');
+    timesEl.innerHTML = `<div class="group"><p>Horaires libres</p><div class="slots">${'<span class="sk sk--slot"></span>'.repeat(8)}</div></div>`;
+    try {
+      const res = await fetch(`/api/creneaux?date=${date}`);
+      const data = await res.json();
+      if (id !== loadId) return;
+      if (!res.ok) throw new Error(data.error);
+      const slots: string[] = data.slots;
+      if (!slots.includes(keep)) state.time = '';
+      summary();
+      if (!slots.length) {
+        timesEl.innerHTML = '<p class="muted bk__hint">Plus d’horaire libre ce jour-là. Choisissez un autre jour.</p>';
+        return;
+      }
+      const btn = (t: string) => `<button type="button" class="slot" role="radio" aria-checked="${t === state.time}" tabindex="-1" data-time="${t}">${hm(t)}</button>`;
+      const am = slots.filter((t) => t < '12:00');
+      const pm = slots.filter((t) => t >= '12:00');
+      timesEl.innerHTML = `<div role="radiogroup" aria-label="Horaire">${[
+        am.length ? `<div class="group"><p>Matin</p><div class="slots">${am.map(btn).join('')}</div></div>` : '',
+        pm.length ? `<div class="group"><p>Après-midi</p><div class="slots">${pm.map(btn).join('')}</div></div>` : '',
+      ].join('')}</div>`;
+      const focusable = timesEl.querySelector<HTMLElement>('[aria-checked=true]') || timesEl.querySelector<HTMLElement>('.slot');
+      focusable?.setAttribute('tabindex', '0');
+    } catch {
+      if (id === loadId) timesEl.innerHTML = '<p class="bk__hint bk__error">Les horaires n’ont pas pu être chargés. Choisissez à nouveau le jour pour réessayer.</p>';
+    } finally {
+      if (id === loadId) timesEl.removeAttribute('aria-busy');
+    }
+  }
+
+  radioGroup(daysEl, (b) => {
+    if (state.date !== b.dataset.date) state.time = '';
+    state.date = b.dataset.date!;
+    summary();
+    loadSlots(state.date, state.time);
+  });
+  radioGroup(timesEl, (b) => {
+    state.time = b.dataset.time!;
+    err('time');
+    summary();
+  });
+
+  // ----- Navigation
+  form.querySelectorAll('[data-next]').forEach((b) =>
+    b.addEventListener('click', () => {
+      if (state.step === 1 && !state.service) return err('service', 'Choisissez un soin pour continuer.');
+      if (state.step === 2 && (!state.date || !state.time)) return err('time', 'Choisissez un horaire pour continuer.');
+      go(state.step + 1);
+    }),
+  );
+  form.querySelectorAll('[data-prev]').forEach((b) => b.addEventListener('click', () => go(state.step - 1)));
+
+  // ----- Phone: tidy the number into +221 XX XXX XX XX
+  const phone = form.elements.namedItem('phone') as HTMLInputElement;
+  phone.addEventListener('blur', () => {
+    const d = phone.value.replace(/\D/g, '');
+    const local = /^221\d{9}$/.test(d) ? d.slice(3) : /^\d{9}$/.test(d) ? d : '';
+    if (local) phone.value = `+221 ${local.slice(0, 2)} ${local.slice(2, 5)} ${local.slice(5, 7)} ${local.slice(7)}`;
+  });
+
+  // ----- Submit
+  const submit = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+  const submitLabel = submit.querySelector<HTMLElement>('[data-label]')!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (state.step !== 3 || submit.getAttribute('aria-busy') === 'true') return;
+    const fd = new FormData(form);
+    const name = String(fd.get('name') || '').trim();
+    const tel = String(fd.get('phone') || '').trim();
+    const email = String(fd.get('email') || '').trim();
+    const digits = tel.replace(/\D/g, '');
+    let firstBad: HTMLElement | null = null;
+    const check = (key: string, bad: boolean, msg: string) => {
+      err(key, bad ? msg : '');
+      if (bad && !firstBad) firstBad = form.querySelector<HTMLElement>(`[name="${key}"]`);
+    };
+    check('name', name.length < 2, 'Indiquez votre nom pour que la clinique vous reconnaisse.');
+    check('phone', digits.length < 9 || digits === '221', 'Indiquez un numéro joignable, par exemple +221 suivi de 9 chiffres.');
+    check('email', !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), 'Cette adresse e-mail semble incomplète.');
+    if (firstBad) return (firstBad as HTMLElement).focus();
+
+    submit.setAttribute('aria-busy', 'true');
+    submit.disabled = true;
+    submitLabel.textContent = 'Réservation en cours';
+    err('form');
+    try {
+      const res = await fetch('/api/rendez-vous', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ service: state.service, date: state.date, time: state.time, name, phone: tel, email, note: fd.get('note'), website: fd.get('website') }),
+      });
+      const data = await res.json();
+      if (res.status === 409) {
+        state.time = '';
+        daysLoaded = false;
+        go(2);
+        err('time', 'Ce créneau vient d’être réservé par un autre patient. Choisissez un autre horaire, vos coordonnées sont gardées.');
+        return;
+      }
+      if (!res.ok) {
+        if (data.errors) Object.entries(data.errors).forEach(([k, v]) => err(k, String(v)));
+        else err('form', data.error || 'La réservation n’a pas abouti. Réessayez dans un instant.');
+        return;
+      }
+      steps.forEach((s) => (s.hidden = true));
+      form.querySelector('.bk__steps')!.setAttribute('hidden', '');
+      recap.hidden = true;
+      $('bk-done-text').textContent = `${state.serviceName}, ${fmtLong(state.date)} à ${hm(state.time)}. La clinique vous rappelle au ${tel} pour confirmer.`;
+      $('bk-ref').textContent = data.ref;
+      ($('bk-ics') as HTMLAnchorElement).href = ics(data.ref);
+      done.hidden = false;
+      done.focus({ preventScroll: true });
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch {
+      err('form', 'Connexion impossible. Vérifiez votre réseau puis réessayez, vos informations sont gardées.');
+    } finally {
+      submit.removeAttribute('aria-busy');
+      submit.disabled = false;
+      submitLabel.textContent = 'Prendre rendez-vous';
+    }
+  });
+
+  function ics(ref: string) {
+    // Dakar is UTC+0 all year, so local time = UTC.
+    const stamp = (min: number) => state.date.replace(/-/g, '') + 'T' + String(Math.floor(min / 60)).padStart(2, '0') + String(min % 60).padStart(2, '0') + '00Z';
+    const [h, m] = state.time.split(':').map(Number);
+    const body = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//BeautifulSmile//RDV//FR', 'BEGIN:VEVENT',
+      `UID:${ref}@beautifulsmile.example`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+      `DTSTART:${stamp(h * 60 + m)}`, `DTEND:${stamp(h * 60 + m + state.duration)}`, `SUMMARY:${state.serviceName} – BeautifulSmile`,
+      'LOCATION:Rond-point JVC\\, Sacré-Cœur 3\\, Dakar', `DESCRIPTION:Référence ${ref}`,
+      'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:Rendez-vous dentaire', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n');
+    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(body);
+  }
+
+  $('bk-again').addEventListener('click', () => {
+    form.reset();
+    phone.value = '+221 ';
+    Object.assign(state, { service: '', serviceName: '', price: '', duration: 30, date: '', time: '' });
+    daysLoaded = false;
+    timesEl.innerHTML = '';
+    done.hidden = true;
+    form.querySelector('.bk__steps')!.removeAttribute('hidden');
+    go(1);
+  });
+
+  // Links with data-soin (price rows, specialty tiles) preselect the service.
+  document.querySelectorAll<HTMLAnchorElement>('a[data-soin]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const r = form.querySelector<HTMLInputElement>(`input[name=service][value="${a.dataset.soin}"]`);
+      if (r && done.hidden && state.step === 1) {
+        r.checked = true;
+        r.dispatchEvent(new Event('change'));
+      }
+    }),
+  );
+</script>

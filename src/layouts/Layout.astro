@@ -1,0 +1,174 @@
+---
+import '../styles/global.css';
+import Logo from '../components/Logo.astro';
+import { clinic, hoursRows } from '../lib/clinic';
+
+interface Props { title: string; description: string; bare?: boolean }
+const { title, description, bare = false } = Astro.props;
+const year = new Date().getFullYear();
+const nav = [
+  { href: '/#soins', label: 'Soins' },
+  { href: '/#cabinet', label: 'Cabinet' },
+  { href: '/#questions', label: 'Questions' },
+  { href: '/#acces', label: 'Accès' },
+];
+const CTA = 'Prendre rendez-vous';
+---
+<!doctype html>
+<html lang="fr" data-type="service">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="page-type" content="service" />
+    <meta name="site-kind" content="other" />
+    <meta name="theme-color" content="#f6f7f5" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="/img/cabinet-1600.webp" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap"
+      rel="stylesheet"
+    />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Dentist',
+      name: clinic.name,
+      address: { '@type': 'PostalAddress', streetAddress: clinic.street, addressLocality: `${clinic.district}, ${clinic.city}`, addressCountry: 'SN' },
+      openingHours: ['Mo-Fr 08:30-18:30', 'Sa 09:00-14:00'],
+    })} />
+  </head>
+  <body id="top">
+    <header class="nav">
+      <div class="wrap">
+        <a class="skip" href="#contenu">Aller au contenu</a>
+        <a class="brand" href="/#top" aria-label={`${clinic.name}, accueil`}><Logo />{clinic.name}</a>
+        {!bare && (
+          <ul class="nav__links">
+            {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+          </ul>
+        )}
+        {!bare && (
+          <button class="nav__menu" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Ouvrir le menu">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14" /></svg>
+          </button>
+        )}
+        <a class="btn btn--primary" href="/#rendez-vous" style={bare ? 'margin-left:auto' : ''}>{CTA}</a>
+      </div>
+    </header>
+
+    {!bare && (
+      <nav class="sheet" id="sheet" hidden aria-label="Menu">
+        {nav.map((n) => <a class="sheet__row" href={n.href}>{n.label}</a>)}
+        <div class="sheet__foot">
+          <p>{clinic.street}, {clinic.district}</p>
+          <p class="muted">Lundi – vendredi 8 h 30 – 18 h 30 · Samedi 9 h – 14 h</p>
+          <a class="btn btn--primary" href="/#rendez-vous">{CTA}</a>
+        </div>
+      </nav>
+    )}
+
+    <main id="contenu">
+      <slot />
+    </main>
+
+    <footer class="closing" id="acces">
+      <div class="wrap">
+        <div class="visit">
+          <div>
+            <p class="label">Adresse</p>
+            <p class="visit__addr">{clinic.street},<br />{clinic.district}, {clinic.city}</p>
+            <a class="link" href={clinic.mapUrl} target="_blank" rel="noopener">Voir l’itinéraire</a>
+          </div>
+          <div>
+            <p class="label">Horaires</p>
+            <dl class="hours">
+              {hoursRows.map((r) => (<div data-idx={r.idx.join(',')}><dt>{r.days}</dt><dd>{r.time}</dd></div>))}
+            </dl>
+          </div>
+          <div>
+            <p class="label">Pages</p>
+            <ul class="foot-links">
+              <li><a class="link" href="/#soins">Soins et tarifs</a></li>
+              <li><a class="link" href="/#rendez-vous">Rendez-vous en ligne</a></li>
+              <li><a class="link" href="/#questions">Questions fréquentes</a></li>
+              <li><a class="link" href={`mailto:${clinic.email}`}>Écrire à la clinique</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="legal">
+          <span class="brand brand--sm"><Logo />{clinic.name}</span>
+          <span>© {year} {clinic.name}</span>
+          <a class="link" href="/confidentialite">Confidentialité</a>
+          <a class="link" href="/admin">Espace clinique</a>
+          <span class="credits">Photographies via Unsplash</span>
+        </div>
+      </div>
+    </footer>
+
+    {!bare && (
+      <nav class="actionbar" aria-label="Action principale">
+        <a class="btn btn--primary" href="/#rendez-vous">{CTA}</a>
+      </nav>
+    )}
+
+    <style>
+      .closing { background: var(--inverse); color: var(--inverse-ink); padding: 96px 0 calc(40px + var(--bar)); }
+      .closing .label { color: var(--inverse-muted); margin-bottom: 12px; }
+      .closing .link { color: var(--inverse-ink); }
+      .visit { display: grid; grid-template-columns: 6fr 3fr 3fr; gap: 24px; padding-bottom: 64px; border-bottom: 1px solid rgb(243 246 244 / 0.16); }
+      .visit__addr { font-family: var(--f-display); font-size: clamp(30px, 2vw + 20px, 44px); line-height: 1.12; letter-spacing: -0.02em; margin-bottom: 20px; }
+      .hours { margin: 0; }
+      .hours div { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid rgb(243 246 244 / 0.12); }
+      .hours dt { color: var(--inverse-muted); }
+      .hours dd { margin: 0; }
+      .hours .is-today dt, .hours .is-today dd { color: var(--inverse-ink); font-weight: 500; }
+      .foot-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+      .legal { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding-top: 32px; font-size: var(--t-small); color: var(--inverse-muted); }
+      .legal .link { color: var(--inverse-muted); font-weight: 400; }
+      .brand--sm { font-size: 17px; color: var(--inverse-ink); margin-right: auto; }
+      .brand--sm :global(svg) { width: 22px; height: 22px; }
+      @media (max-width: 1023px) { .visit { grid-template-columns: 1fr 1fr; } .visit > :first-child { grid-column: 1 / -1; } }
+      @media (max-width: 639px) { .visit { grid-template-columns: 1fr; gap: 40px; } .closing { padding-top: 72px; } .brand--sm { width: 100%; } }
+    </style>
+
+    <script>
+      // Mobile menu
+      const btn = document.querySelector<HTMLButtonElement>('.nav__menu');
+      const sheet = document.getElementById('sheet');
+      if (btn && sheet) {
+        const set = (open: boolean) => {
+          sheet.hidden = !open;
+          btn.setAttribute('aria-expanded', String(open));
+          btn.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+          document.body.style.overflow = open ? 'hidden' : '';
+        };
+        btn.addEventListener('click', () => set(sheet.hidden));
+        sheet.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) set(false); });
+        addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+        matchMedia('(min-width: 1024px)').addEventListener('change', (m) => m.matches && set(false));
+      }
+      // Mobile action bar: hidden while the hero's own button or the booking form is on screen.
+      const bar = document.querySelector<HTMLElement>('.actionbar');
+      const watched = ['.hero .btn--primary', '#rendez-vous'].map((s) => document.querySelector(s)).filter(Boolean) as Element[];
+      if (bar && watched.length && 'IntersectionObserver' in window) {
+        const seen = new Set<Element>();
+        bar.classList.add('is-away');
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => (e.isIntersecting ? seen.add(e.target) : seen.delete(e.target)));
+          bar.classList.toggle('is-away', seen.size > 0);
+        });
+        watched.forEach((w) => io.observe(w));
+      }
+      // Mark today's opening hours (clinic time zone)
+      const day = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Dakar' })).getDay();
+      document.querySelectorAll<HTMLElement>('.hours [data-idx]').forEach((row) => {
+        if (row.dataset.idx!.split(',').includes(String(day))) row.classList.add('is-today');
+      });
+    </script>
+  </body>
+</html>

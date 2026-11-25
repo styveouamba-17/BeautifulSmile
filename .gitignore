@@ -1,0 +1,7 @@
+node_modules
+dist
+.astro
+data/bookings.json
+raw
+.taste-skill
+shots

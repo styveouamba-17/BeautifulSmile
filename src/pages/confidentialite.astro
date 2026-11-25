@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { clinic } from '../lib/clinic';
+---
+<Layout title="Confidentialité, BeautifulSmile" description="Comment la clinique utilise les informations transmises lors d’une prise de rendez-vous.">
+  <section class="legal-page">
+    <div class="wrap">
+      <h1>Confidentialité</h1>
+      <div class="body">
+        <p class="lead">Les informations envoyées avec le formulaire de rendez-vous servent uniquement à organiser votre visite à la clinique {clinic.name}.</p>
+        <h2>Ce qui est enregistré</h2>
+        <p>Votre nom, votre numéro de téléphone, votre e-mail s’il est donné, le soin choisi, la date, l’heure et votre message.</p>
+        <h2>Qui y a accès</h2>
+        <p>Seule l’équipe de la clinique. Rien n’est vendu ni partagé avec des tiers.</p>
+        <h2>Combien de temps</h2>
+        <p>Les rendez-vous sont conservés le temps du suivi de vos soins, conformément à la loi sénégalaise sur la protection des données personnelles.</p>
+        <h2>Vos droits</h2>
+        <p>Vous pouvez demander à consulter, corriger ou supprimer vos informations en <a class="link" href={`mailto:${clinic.email}`}>écrivant à la clinique</a>.</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .legal-page { padding: calc(var(--nav) + 80px) 0 96px; }
+  .body { max-width: 62ch; margin-top: 32px; display: grid; gap: 16px; }
+  .body h2 { font-size: 26px; margin-top: 16px; }
+</style>
